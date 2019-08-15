@@ -1,40 +1,40 @@
-# �R���e�i���̍���
+﻿# コンテナ環境の作り方
 
-## host��
+## host環境
 
 https://github.com/agl-ic-eg/container-host  
-��README.md���Q�Ƃ��Ċ����\�z����B  
+のREADME.mdを参照して環境を構築する。  
 
-��{�I�Ȏ菇��  
+基本的な手順は  
 https://elinux.org/R-Car/Boards/Yocto-Gen3  
-�Ɠ����Ȃ̂ŁA�r���h�����C���[�W�́A���̃y�[�W��SD�J�[�h�ŋN������菇�ɕ����SD�ɏ������ށB  
+と同じなので、ビルドしたイメージは、このページのSDカードで起動する手順に倣ってSDに書き込む。  
 
 
-## guest��
+## guest環境
 
 https://github.com/agl-ic-eg/container-guest  
-��README.md���Q�Ƃ��Ċ����\�z����B  
+のREADME.mdを参照して環境を構築する。  
 
-host�����������܂ꂽSD�J�[�h�̃��[�g�Ɉړ���(cd����)  
+host環境が書き込まれたSDカードのルートに移動し(cdして)  
 
 mkdir -p lxc/guest  
 
 cd lxc/guest  
 
-tar xvjf �r���h�����C���[�W.tar.bz2  
+tar xvjf ビルドしたイメージ.tar.bz2  
 
-�ŁA�������݂��s���B  
+で、書き込みを行う。  
 
 
-## ����m�F
+## 動作確認
 
-host��guest�̊�����������SD�J�[�h��M3SK���N�����A���O�C����  
+hostとguestの環境を書きこんだSDカードでM3SKを起動し、ログイン後  
 
 lxc-create -n guest -t none  
 
-�ŁA��̃R���e�i���쐬����B
+で、空のコンテナを作成する。
 
-�쐬����ƁA�f�B���N�g��/var/lib/lxc/guest ���쐬�����B���̃f�B���N�g���ɂ���config���A���̂悤�ɏ���������  
+作成すると、ディレクトリ/var/lib/lxc/guest が作成される。そのディレクトリにあるconfigを、次のように書き換える  
 
 lxc.net.0.type = empty  
 lxc.rootfs.path = dir:/lxc/guest  
@@ -52,13 +52,13 @@ lxc.mount.entry = /sys/kernel/security sys/kernel/security none ro,bind,optional
 lxc.cgroup.devices.allow = c 116:* rwm  
 lxc.mount.entry = /dev/snd dev/snd none bind,optional,create=dir  
 
-����������A  
+書き換え後、  
 lxc-start -n guest  
-�ŋN�������̂��A
+で起動したのち、
 lxc-attach -n guest  
-�ŁA�R���e�i���ɓ���B  
+で、コンテナ内に入る。  
 
-����̃R���t�B�O�́A�T�E���h�f�o�C�X���Q�X�g�Ɋ��蓖�Ă�ݒ�ɂȂ��Ă���̂ŁAaplay�ŉ����t�@�C�����Đ��ł���͂��B  
-�Ȃ��AM3SK�̓f�t�H���g�{�����[����0�Ȃ̂ŁAalsamixer�ŉ��ʂ𒲐�����̂�Y�ꂸ�ɁB  
+今回のコンフィグは、サウンドデバイスをゲストに割り当てる設定になっているので、aplayで音声ファイルが再生できるはず。  
+なお、M3SKはデフォルトボリュームが0なので、alsamixerで音量を調整するのを忘れずに。  
 
 
