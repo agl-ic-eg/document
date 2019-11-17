@@ -114,6 +114,41 @@ lxc-startでコンテナを起動すると、vxcan1がguest側にアサインさ
 
 https://qiita.com/yuichi-kusakabe/items/e5b50aa3edb712bb6916
 
+
+
+## 仮想ネットワークサポート(host-guest, guest-guest)
+
+hostにlxc-networkingを追加する。
+
+	IMAGE_INSTALL_append = " lxc-networking "
+
+lxc-networkingがhostにインストールされていると、ifconfigでネットワークデバイスの一覧を表示すると、lxcbr0が表示されるようになる。  
+lxc 3.2.1の場合は以下の通り。  
+
+	lxcbr0    Link encap:Ethernet  HWaddr 00:16:3E:00:00:00
+	          inet addr:10.0.3.1  Bcast:0.0.0.0  Mask:255.255.255.0
+
+次に、guestのコンフィグに次の記述を追加する  
+
+	lxc.net.0.type = veth
+	lxc.net.0.link = lxcbr0
+	lxc.net.0.flags = up
+	lxc.net.0.hwaddr = fe:0d:e4:01:xx:xx
+	lxc.net.0.veth.mode = bridge
+	lxc.net.0.ipv4.address = 10.0.3.10/24
+
+typeでvethデバイスを指定しており、hostのlxcbr0に接続する。  
+flagsは、コンテナ起動時にifup(fulupではない)するか否かを指定する。upは自動で有効化を意味する。  
+hwaddrは仮想etherのmacアドレスを指定する。xxにすると自動で値を割り振ってくれる。  
+veth.mode = bridgeは、動作モードはbridgeを指定する。routerも指定できるが、使い方はまだわかっていない。  
+ipv4.addressでIPアドレスを指定。hostのブリッジが、10.0.3.1/24になっているので、それに合わせてIPアドレスを指定する。  
+
+この設定を行うことで、guest-host間でpingが通るようになる。同様の設定(IPアドレスは、同じネットワークアドレスの別IP)を行うことで、guest-guest間の通信も可能になる。
+
+
+
+
+
 ## pulseaudio動作(同一コンテナ内)
 
 ### pulseaudioをゲストOSにインストールする
@@ -272,3 +307,5 @@ agl@m3ulcb-guest:~$ paplay /usr/share/sounds/alsa/Front_Right.wav
 - udevでも動かせるようにする(SDLとかやると必要になりそう)
 - 別のコンテナからtcpかdomain-socketでストリームを流せるようにする
 - qemuで音を鳴らす
+
+
